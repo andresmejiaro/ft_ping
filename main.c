@@ -1,8 +1,5 @@
-#include<sys/socket.h>
-#include<stdio.h>
-#include<unistd.h>
-#include<strings.h>
-#include<netdb.h>
+#include "ft_ping.h"
+
 
 int main(int argc, char**argv){
     struct addrinfo hints = {0}, *ai;
