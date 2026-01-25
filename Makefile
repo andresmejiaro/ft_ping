@@ -2,7 +2,7 @@ NAME = ft_ping
 
 MAIN = main.c
 
-SRCS = 
+SRCS = ping.c packages.c parsing.c send_recieve.c
 
 CC = gcc
 
@@ -14,18 +14,22 @@ CFLAGS = -Wall -Werror -Wextra
 
 all: $(NAME)
 
-$(NAME): $(OBJS) $(MAINOBJ) 
+$(NAME): $(OBJS) $(MAINOBJ)
 	$(CC) $(CFLAGS) $(OBJS) $(MAINOBJ) -o $@
+	$(MAKE) cap
+
+cap: $(NAME)
+	sudo setcap cap_net_raw+ep $(NAME)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(MAINOBJ) $(TESTOBJ)
+	rm -f $(OBJS) $(MAINOBJ)
 
 fclean: clean
-	rm -f $(NAME) $(TEST) $(NAME_DEBUG)
+	rm -f $(NAME)
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re cap

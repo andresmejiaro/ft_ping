@@ -1,69 +1,77 @@
 #include "ft_ping.h"
 
-
-struct addrinfo* resolve_address(params *parameters){
+struct addrinfo *resolve_address(params *parameters) {
     struct addrinfo hints;
     struct addrinfo *ai;
 
-
-    bzero(&hints,sizeof(hints));
+    bzero(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_RAW;
     hints.ai_protocol = IPPROTO_ICMP;
 
-    int err = getaddrinfo(parameters->addr,NULL ,&hints, &ai);
-    if (err){
+    int err = getaddrinfo(parameters->addr, NULL, &hints, &ai);
+    if (err) {
         printf("getaddrinfo: error");
-        //todo clean memory
-        
+        // todo clean memory
+
         exit(1);
     }
 
     return ai;
 }
 
-int create_raw_socket(){
+int create_raw_socket() {
     int sock;
-    sock = socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
-    if (sock == -1){
+    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (sock == -1) {
         printf("Error creating socket");
-        //todo free memory and fd
+        // todo free memory and fd
         exit(1);
     }
     return sock;
 }
 
-
-
-void cleanup(){
-    //free ai from resolve address use freeaddrinfo
-    //close the raw_socket close(raw_socket)
+void cleanup() {
+    // free ai from resolve address use freeaddrinfo
+    // close the raw_socket close(raw_socket)
 }
 
-void ping(params parameters){
+void print_header(struct addrinfo *ai, params *parameters) {
+    struct sockaddr_in *dir;
+    char addr_ip[16];
+
+    dir = (struct sockaddr_in *)ai->ai_addr;
+
+    if (inet_ntop(AF_INET, &dir->sin_addr, addr_ip, 16) == 0) {
+        // todo exit error in this and free on this
+        exit(1);
+    }
+    printf("PING %s (%s): %d data bytes\n", parameters->addr, addr_ip, PAYLOAD_LENGTH);
+}
+
+void ping(params parameters) {
     struct addrinfo *ai;
     int raw_socket_fd;
     uint8_t request[sizeof(struct icmphdr) + PAYLOAD_LENGTH];
- //fixed size enough for this
-    
-    
-    
+    uint8_t reply[1000]; // fixed size enough for this
+    lineprint linep;
+
     ai = resolve_address(&parameters);
+    print_header(ai, &parameters);
+
     raw_socket_fd = create_raw_socket();
-    while(1){
-        build_request(request);
-        send_request(raw_socket_fd,request, ai);
-        while (!reply_ready()){
-            (void)parameters;
-        }
-        parse_reply();
-        print_screen();
-        usleep(1);
-        if (check_for_done()){
-            print_summary();
-            break;
-        }
+    while (1) {
+        bzero(reply, 1000);
+        bzero(&linep, sizeof(linep));
+        build_request(request, &linep);
+        send_request(raw_socket_fd, request, ai);
+        gettimeofday(&linep.time_sent, NULL);
+        receive_reply(raw_socket_fd, reply, &linep);
+        parse_reply(request, reply, &linep); // also prints
+        sleep(1);
+        /* if (check_for_done()){ */
+        /*     break; */
+        /* } */
     }
     cleanup();
-
 }

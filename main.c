@@ -1,13 +1,31 @@
 #include "ft_ping.h"
 
+void print_help() {
+    printf("Usage: ft_ping [OPTION...] HOST ...\n"
+           "Send ICMP ECHO_REQUEST packets to network hosts.\n"
+           "\n"
+           " Options:\n"
+           "\n"
+           "  -n                         do not resolve host addresses\n"
+           "  -r                         send directly to a host on an attached network\n"
+           "  --ttl=N                    specify N as time-to-live\n"
+           "  -w                         stop after N seconds\n"
+           "  -W                         number of seconds to wait for response\n"
+           "  -s                         send NUMBER data octets\n"
+           "  -p                         fill ICMP packet with given pattern (hex)\n"
+           "\n"
+           "  -v                         verbose output\n"
+           "  -?                         give this help list\n");
+}
 
-int main(int argc, char**argv){
-    
+int main(int argc, char **argv) {
+
     params p;
 
     parse_params(argc, argv, &p);
-    
+    if (p.help_flag) {
+        print_help();
+        exit(0);
+    }
     ping(p);
 }
-
-

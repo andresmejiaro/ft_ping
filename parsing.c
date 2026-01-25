@@ -35,6 +35,10 @@ static int set_short_flag(params *p, char flag, const char *value) {
         p->n_flag = 1;
         return 0;
     }
+    if (flag == 'r') {
+        p->r_flag = 1;
+        return 0;
+    }
     if (flag == 'w') {
         p->w_flag = 1;
         if (parse_uint(value, &p->w_parameter) != 0)
@@ -44,6 +48,21 @@ static int set_short_flag(params *p, char flag, const char *value) {
     if (flag == 'W') {
         p->W_flag = 1;
         if (parse_uint(value, &p->W_parameter) != 0)
+            return -1;
+        return 0;
+    }
+    if (flag == 's') {
+        p->s_flag = 1;
+        if (parse_uint(value, &p->s_parameter) != 0)
+            return -1;
+        return 0;
+    }
+    if (flag == 'p') {
+        p->p_flag = 1;
+        if (value == NULL || *value == '\0')
+            return -1;
+        p->p_parameter = strdup(value);
+        if (p->p_parameter == NULL)
             return -1;
         return 0;
     }
@@ -66,15 +85,15 @@ void parse_params(int argc, char **argv, params *parameters) {
         const char *arg = argv[i];
 
         if (arg[0] != '-' || arg[1] == '\0') {
-            if (parameters->addr != NULL){
+            if (parameters->addr != NULL) {
                 fprintf(stderr, "Error: more than one addr"); // more clonish when advacing
-                //free all memory
+                // free all memory
                 exit(1);
             }
-            
+
             parameters->addr = strdup(arg);
-            
-            if (parameters->addr == 0){
+
+            if (parameters->addr == 0) {
                 // cleanup cause malloc failed
                 exit(1);
             }
@@ -108,23 +127,20 @@ void parse_params(int argc, char **argv, params *parameters) {
             fprintf(stderr, "unknown option: %s\n", arg);
             return;
         }
-
-        int j;
-        for (j = 1; arg[j] != '\0'; j++) {
-            char flag = arg[j];
+        if (arg[2] != '\0') {
+            fprintf(stderr, "unknown option: %s\n", arg);
+            return;
+        }
+        {
+            char flag = arg[1];
             const char *value = NULL;
 
-            if (flag == 'w' || flag == 'W') {
-                if (arg[j + 1] != '\0') {
-                    value = &arg[j + 1];
-                    j = (int)strlen(arg) - 1;
-                } else {
-                    if (i + 1 >= argc) {
-                        fprintf(stderr, "missing value for -%c\n", flag);
-                        return;
-                    }
-                    value = argv[++i];
+            if (flag == 'w' || flag == 'W' || flag == 's' || flag == 'p') {
+                if (i + 1 >= argc) {
+                    fprintf(stderr, "missing value for -%c\n", flag);
+                    return;
                 }
+                value = argv[++i];
             }
 
             if (set_short_flag(parameters, flag, value) != 0) {
