@@ -1,5 +1,16 @@
 #include "ft_ping.h"
 
+volatile sig_atomic_t g_signal_recv = 0;
+
+
+void signal_handler(int signal){
+    g_signal_recv = 1;
+    (void) signal;
+}
+
+
+
+
 void print_help() {
     printf("Usage: ft_ping [OPTION...] HOST ...\n"
            "Send ICMP ECHO_REQUEST packets to network hosts.\n"
@@ -22,10 +33,12 @@ int main(int argc, char **argv) {
 
     params p;
 
+
     parse_params(argc, argv, &p);
     if (p.help_flag) {
         print_help();
         exit(0);
     }
+    signal(SIGINT,signal_handler);
     ping(p);
 }

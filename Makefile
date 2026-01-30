@@ -16,7 +16,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS) $(MAINOBJ)
 	$(CC) $(CFLAGS) $(OBJS) $(MAINOBJ) -o $@
-	$(MAKE) cap
+	
 
 cap: $(NAME)
 	sudo setcap cap_net_raw+ep $(NAME)

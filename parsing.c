@@ -6,6 +6,8 @@
 
 static void init_params(params *p) {
     memset(p, 0, sizeof(*p));
+    p->W_parameter = 10.0;
+    p->w_parameter = -1.0;
 }
 
 static int parse_uint(const char *s, unsigned int *out) {
@@ -19,6 +21,52 @@ static int parse_uint(const char *s, unsigned int *out) {
     if (errno != 0 || end == s || *end != '\0' || v > UINT_MAX)
         return -1;
     *out = (unsigned int)v;
+    return 0;
+}
+
+static int parse_double(const char *s, double *out) {
+    char *end = NULL;
+    double v;
+
+    if (s == NULL || *s == '\0')
+        return -1;
+    errno = 0;
+    v = strtod(s, &end);
+    if (errno != 0 || end == s || *end != '\0')
+        return -1;
+    if (v < 0.0)
+        return -1;
+    *out = v;
+    return 0;
+}
+
+int double_to_timeval(double seconds, struct timeval *out) {
+    int neg = 0;
+    double frac;
+    time_t sec;
+    suseconds_t usec;
+
+    if (out == NULL)
+        return -1;
+    if (seconds < 0.0) {
+        neg = 1;
+        seconds = -seconds;
+    }
+    sec = (time_t)seconds;
+    frac = seconds - (double)sec;
+    if (frac < 0.0)
+        frac = 0.0;
+    usec = (suseconds_t)(frac * 1000000.0);
+    if (usec >= 1000000) {
+        sec += 1;
+        usec -= 1000000;
+    }
+    if (neg) {
+        sec = -sec;
+        usec = -usec;
+    }
+    out->tv_sec = sec;
+    out->tv_usec = usec;
     return 0;
 }
 
@@ -41,13 +89,13 @@ static int set_short_flag(params *p, char flag, const char *value) {
     }
     if (flag == 'w') {
         p->w_flag = 1;
-        if (parse_uint(value, &p->w_parameter) != 0)
+        if (parse_double(value, &p->w_parameter) != 0)
             return -1;
         return 0;
     }
     if (flag == 'W') {
         p->W_flag = 1;
-        if (parse_uint(value, &p->W_parameter) != 0)
+        if (parse_double(value, &p->W_parameter) != 0)
             return -1;
         return 0;
     }

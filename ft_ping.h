@@ -15,6 +15,21 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <signal.h>
+#include <math.h>
+
+extern volatile sig_atomic_t g_signal_recv;
+
+typedef struct stats{
+    int packages_sent;
+    int packages_recieved;
+    float cum_time;
+    float cum_time_sq;
+    float min_time;
+    float max_time;
+} stats;
+
+
 
 typedef struct {
     int verbose_flag;
@@ -22,9 +37,9 @@ typedef struct {
     int n_flag;
     int r_flag;
     int w_flag;
-    unsigned int w_parameter;
+    double w_parameter;
     int W_flag;
-    unsigned int W_parameter;
+    double W_parameter;
     int s_flag;
     unsigned int s_parameter;
     int p_flag;
@@ -50,5 +65,6 @@ void build_request(uint8_t *buf, lineprint *);
 void send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai);
 void receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *);
 int parse_reply(uint8_t *request, uint8_t *reply, lineprint *);
+int double_to_timeval(double seconds, struct timeval *out);
 
 #endif
