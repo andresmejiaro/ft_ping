@@ -2,7 +2,7 @@ NAME = ft_ping
 
 MAIN = main.c
 
-SRCS = ping.c packages.c parsing.c send_recieve.c
+SRCS = ping.c packages.c parsing.c send_recieve.c signal_stats.c
 
 CC = gcc
 
@@ -15,7 +15,7 @@ CFLAGS = -Wall -Werror -Wextra
 all: $(NAME)
 
 $(NAME): $(OBJS) $(MAINOBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAINOBJ) -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(MAINOBJ) -lm -o $@
 	
 
 cap: $(NAME)

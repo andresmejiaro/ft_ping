@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <math.h>
+#include <errno.h>
 
 extern volatile sig_atomic_t g_signal_recv;
 
@@ -59,12 +60,16 @@ typedef struct {
     float time_diff;
 } lineprint;
 
-void parse_params(int argc, char **argv, params *parameters);
+int parse_params(int argc, char **argv, params *parameters);
 void ping(params parameters);
 void build_request(uint8_t *buf, lineprint *);
-void send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai);
-void receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *);
+int send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai);
+int receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *);
 int parse_reply(uint8_t *request, uint8_t *reply, lineprint *);
 int double_to_timeval(double seconds, struct timeval *out);
+void stats_update(stats *_stats, int back, float time);
+void print_stats(stats *_stats, params *parameters);
+float timediff(struct timeval tim1, struct timeval tim2);
+
 
 #endif

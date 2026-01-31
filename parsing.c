@@ -10,6 +10,13 @@ static void init_params(params *p) {
     p->w_parameter = -1.0;
 }
 
+static void free_params_local(params *p) {
+    free(p->p_parameter);
+    free(p->addr);
+    p->p_parameter = NULL;
+    p->addr = NULL;
+}
+
 static int parse_uint(const char *s, unsigned int *out) {
     char *end = NULL;
     unsigned long v;
@@ -124,7 +131,7 @@ static int set_long_ttl(params *p, const char *value) {
     return 0;
 }
 
-void parse_params(int argc, char **argv, params *parameters) {
+int parse_params(int argc, char **argv, params *parameters) {
     int i;
 
     init_params(parameters);
@@ -134,15 +141,15 @@ void parse_params(int argc, char **argv, params *parameters) {
 
         if (arg[0] != '-' || arg[1] == '\0') {
             if (parameters->addr != NULL) {
-                fprintf(stderr, "Error: more than one addr"); // more clonish when advacing
-                // free all memory
+                fprintf(stderr, "Error: more than one addr");
+                free_params_local(parameters);
                 exit(1);
             }
 
             parameters->addr = strdup(arg);
 
             if (parameters->addr == 0) {
-                // cleanup cause malloc failed
+                free_params_local(parameters);
                 exit(1);
             }
             continue;
@@ -158,26 +165,31 @@ void parse_params(int argc, char **argv, params *parameters) {
             } else if (arg[5] == '\0') {
                 if (i + 1 >= argc) {
                     fprintf(stderr, "missing value for --ttl\n");
-                    return;
+                    free_params_local(parameters);
+                    return -1;
                 }
                 value = argv[++i];
             } else {
                 fprintf(stderr, "unknown option: %s\n", arg);
-                return;
+                free_params_local(parameters);
+                return -1;
             }
             if (set_long_ttl(parameters, value) != 0) {
                 fprintf(stderr, "invalid --ttl value: %s\n", value);
-                return;
+                free_params_local(parameters);
+                return -1;
             }
             continue;
         }
         if (arg[1] == '-') {
             fprintf(stderr, "unknown option: %s\n", arg);
-            return;
+            free_params_local(parameters);
+            return -1;
         }
         if (arg[2] != '\0') {
             fprintf(stderr, "unknown option: %s\n", arg);
-            return;
+            free_params_local(parameters);
+            return -1;
         }
         {
             char flag = arg[1];
@@ -186,15 +198,23 @@ void parse_params(int argc, char **argv, params *parameters) {
             if (flag == 'w' || flag == 'W' || flag == 's' || flag == 'p') {
                 if (i + 1 >= argc) {
                     fprintf(stderr, "missing value for -%c\n", flag);
-                    return;
+                    free_params_local(parameters);
+                    return -1;
                 }
                 value = argv[++i];
             }
 
             if (set_short_flag(parameters, flag, value) != 0) {
                 fprintf(stderr, "unknown or invalid option: -%c\n", flag);
-                return;
+                free_params_local(parameters);
+                return -1;
             }
         }
     }
+    if (parameters->addr == NULL) {
+        fprintf(stderr, "missing host\n");
+        free_params_local(parameters);
+        return -1;
+    }
+    return 0;
 }

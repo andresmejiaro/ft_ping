@@ -5,6 +5,8 @@ void stats_update(stats *_stats, int back, float time){
     _stats->packages_sent += 1;
     if(back)
         _stats->packages_recieved += 1;
+    else
+        return ;
     _stats->cum_time += time;
     _stats->cum_time_sq += time*time;
     if (_stats->min_time == 0 || time < _stats->min_time)

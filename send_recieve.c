@@ -1,32 +1,32 @@
 #include "ft_ping.h"
 #include <errno.h>
 
-void send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai) {
+int send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai) {
     ssize_t sent_bytes;
 
     sent_bytes = sendto(raw_socket_fd, request, sizeof(struct icmphdr) + PAYLOAD_LENGTH, 0,
                         ai->ai_addr, ai->ai_addrlen);
     if (sent_bytes < 0) {
-        // todo free everything
         printf("error sending");
-        exit(1);
+        return 1;
     }
+    return 0;
 }
 
-void receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *linep) {
+int receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *linep) {
 
     int recv_bytes;
 
-    /* TODO: add timeout (SO_RCVTIMEO or select/poll) to avoid blocking forever */
     recv_bytes = recvfrom(raw_socket_fd, reply, 1000, 0, NULL, NULL);
-    if (recv_bytes < 0) {
-        fprintf(stderr, "recvfrom error errno=%d (%s)\n", errno, strerror(errno)); // DEBUG_PRINT
-        // todo free everything
-        printf("error recieving");
-        exit(1);
+    if (recv_bytes < 0 && errno != EAGAIN) {
+        
+            
+            printf("error recieving");
+            return 1;  
     }
     gettimeofday(&linep->time_recieved, NULL);
     linep->received_size = recv_bytes;
+    return 0;
 }
 
 struct icmphdr *align_header(uint8_t *buffer) {
@@ -70,8 +70,7 @@ int parse_reply(uint8_t *request, uint8_t *reply, lineprint *linep) {
     reply_ip = (struct ip *)reply;
 
     if (inet_ntop(AF_INET, &reply_ip->ip_src, linep->address, 16) == 0) {
-        // todo exit error in this and free on this
-        exit(1);
+        strcpy(linep->address,"Unknown");
     }
     linep->received_size -= reply_ip->ip_hl * 4;
     linep->ttl = reply_ip->ip_ttl;

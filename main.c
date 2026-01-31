@@ -9,8 +9,6 @@ void signal_handler(int signal){
 }
 
 
-
-
 void print_help() {
     printf("Usage: ft_ping [OPTION...] HOST ...\n"
            "Send ICMP ECHO_REQUEST packets to network hosts.\n"
@@ -34,7 +32,9 @@ int main(int argc, char **argv) {
     params p;
 
 
-    parse_params(argc, argv, &p);
+    if (parse_params(argc, argv, &p) != 0) {
+        return 1;
+    }
     if (p.help_flag) {
         print_help();
         exit(0);
