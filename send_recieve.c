@@ -1,4 +1,5 @@
 #include "ft_ping.h"
+#include <errno.h>
 
 void send_request(int raw_socket_fd, uint8_t *request, struct addrinfo *ai) {
     ssize_t sent_bytes;
@@ -19,6 +20,7 @@ void receive_reply(int raw_socket_fd, uint8_t *reply, lineprint *linep) {
     /* TODO: add timeout (SO_RCVTIMEO or select/poll) to avoid blocking forever */
     recv_bytes = recvfrom(raw_socket_fd, reply, 1000, 0, NULL, NULL);
     if (recv_bytes < 0) {
+        fprintf(stderr, "recvfrom error errno=%d (%s)\n", errno, strerror(errno)); // DEBUG_PRINT
         // todo free everything
         printf("error recieving");
         exit(1);

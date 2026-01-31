@@ -35,6 +35,7 @@ int create_raw_socket(params *parameters) {
             printf("Error setting socket timeout");
             exit(1);
         }
+        fprintf(stderr, "SO_RCVTIMEO set to %ld.%06ld seconds\n", (long)tv.tv_sec, (long)tv.tv_usec); // DEBUG_PRINT
     }
     if (parameters->ttl_flag) {
         int ttl = (int)parameters->ttl_parameter;
